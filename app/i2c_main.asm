@@ -32,12 +32,9 @@ init:
             bic.w   #BIT0, &P6OUT
             bis.w   #BIT0, &P6DIR
 
-            ; Set Pin 6.1 as output for SCL
-            bic.w   #BIT1, &P6OUT
-            bis.w   #BIT1, &P6DIR
-
-            ; Disable low-power mode
-            bic.w   #LOCKLPM5,&PM5CTL0
+            ; Set Pin 6.1 as output for SCL (Port6.SCL)
+            bic.b   #BIT1, &P6OUT
+            bis.b   #BIT1, &P6DIR
 
             ;LED Initialization
             bic.b   #BIT0,&P1OUT            ; Clear P1.0 output
@@ -128,7 +125,9 @@ main:
 
 ;---------Start i2c_read Subroutine--------------------------------------------
 
+
 ;---------End i2c_read Subroutine----------------------------------------------
+
 
 ;------------------------------------------------------------------------------
 ; Interrupt Service Routines
@@ -139,12 +138,12 @@ main:
 TimerB0_1s:
 
 	xor.b	#BIT0, &P1OUT		; Toggle P1.0(LED)
-	bic.w	#TBIFG, &TB0CTL		;turn LED off
+;    xor.b   #BIT0, &P6OUT      ; Testing I2C Pins
+;    xor.b   #BIT1, &P6OUT
+	bic.w	#TBIFG, &TB0CTL		;Clear interrupt flag
 
 	reti
 ;-------------------------------End TimerB1_2s---------------------------------
-
-
 
 ;------------------------------------------------------------------------------
 ;           Interrupt Vectors
@@ -152,9 +151,6 @@ TimerB0_1s:
             .sect   RESET_VECTOR            ; MSP430 RESET Vector
             .short  RESET                   ;
 
-
-
             .sect   ".int42"                ; TB0 vector
             .short  TimerB0_1s              ;
             .end
-
