@@ -27,9 +27,10 @@ init:
             ; stop watchdog timer
             mov.w   #WDTPW+WDTHOLD,&WDTCTL
 
-            ; Set Pin 6.0 as output for SDA (Port6.SDA)
-            bic.b   #BIT0, &P6OUT
-            bis.b   #BIT0, &P6DIR
+
+            ; Set Pin 6.0 as output for SDA
+            bic.w   #BIT0, &P6OUT
+            bis.w   #BIT0, &P6DIR
 
             ; Set Pin 6.1 as output for SCL (Port6.SCL)
             bic.b   #BIT1, &P6OUT
@@ -52,17 +53,22 @@ init:
 
             ; Disable low-power mode
             bic.w   #LOCKLPM5,&PM5CTL0
-            nop
+            NOP
             bis.w	#GIE, SR					;Enable global interrupt
-            nop
+            NOP
+
 
 main:
 
-            nop 
+
+            
             jmp main
-            nop
+            
 
 
+;------------------------------------------------------------------------------
+; Subroutines
+;------------------------------------------------------------------------------
 
 ;------------------------------------------------------------------------------
 ; Interrupt Service Routines
