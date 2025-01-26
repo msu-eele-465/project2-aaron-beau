@@ -29,11 +29,11 @@ init:
 
 
             ; Set Pin 6.0 as output for SDA
-            bic.w   #BIT0, &P6OUT
-            bis.w   #BIT0, &P6DIR
+            bis.b   #BIT0, &P6OUT
+            bis.b   #BIT0, &P6DIR
 
             ; Set Pin 6.1 as output for SCL (Port6.SCL)
-            bic.b   #BIT1, &P6OUT
+            bis.b   #BIT1, &P6OUT
             bis.b   #BIT1, &P6DIR
 
             ;LED Initialization
@@ -53,13 +53,14 @@ init:
 
             ; Disable low-power mode
             bic.w   #LOCKLPM5,&PM5CTL0
-            NOP
+            nop
             bis.w	#GIE, SR					;Enable global interrupt
-            NOP
+            nop
 
 
 main:
-
+    call #i2c_start
+    call #i2c_stop
 
             
             jmp main
@@ -75,12 +76,21 @@ main:
 
 
 ;---------Start i2c_start Subroutine-------------------------------------------
-
+i2c_start:
+    bic.b   #BIT0, &P6OUT       ; set SDA low          
+    call    #i2c_sda_delay      ; short delay
+    bic.b   #BIT1, &P6OUT       ; pull clock low
+    ret
 ;---------End i2c_start Subroutine---------------------------------------------
 
 
 ;---------Start i2c_stop Subroutine--------------------------------------------
-
+i2c_stop:
+    bis.b   #BIT1, &P6OUT        ; ensure SCL high
+    nop
+    bis.b   #BIT0, &P6OUT        ; Set SDA high
+    call    #i2c_sda_delay       ; short delay
+    ret
 ;---------End i2c_stop Subroutine----------------------------------------------
 
 
@@ -104,6 +114,14 @@ main:
 
 
 ;---------Start i2c_sda_delay Subroutine---------------------------------------
+i2c_sda_delay:
+    mov.w   #0100h, R4      ; 1 ms delay
+delay:
+    nop
+    dec.w   R4              ; decrement delay var
+    jnz     delay           ; continue till R4 is zero
+    ret
+    
 
 ;---------End i2c_sda_delay Subroutine-----------------------------------------
 
@@ -138,8 +156,6 @@ main:
 TimerB0_1s:
 
 	xor.b	#BIT0, &P1OUT		; Toggle P1.0(LED)
-;    xor.b   #BIT0, &P6OUT      ; Testing I2C Pins
-;    xor.b   #BIT1, &P6OUT
 	bic.w	#TBIFG, &TB0CTL		;Clear interrupt flag
 
 	reti
