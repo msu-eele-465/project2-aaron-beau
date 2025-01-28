@@ -32,6 +32,10 @@ init:
             bis.b   #BIT1, &P6OUT
             bis.b   #BIT1, &P6DIR
 
+            ; Set Pin6.0 as output for SDA (Port 6.0
+            bis.b   #BIT0, &P6OUT
+            bis.b   #BIT0, &P6DIR
+
             ;LED Initialization
             bic.b   #BIT0,&P1OUT            ; Clear P1.0 output
             bis.b   #BIT0,&P1DIR            ; Set P1.0 as output
