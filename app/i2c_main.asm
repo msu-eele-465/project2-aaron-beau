@@ -27,14 +27,14 @@ init:
             ; stop watchdog timer
             mov.w   #WDTPW+WDTHOLD,&WDTCTL
 
-
-            ; Set Pin 6.0 as output for SDA
-            bis.b   #BIT0, &P6OUT
-            bis.b   #BIT0, &P6DIR
-
+            
             ; Set Pin 6.1 as output for SCL (Port6.SCL)
             bis.b   #BIT1, &P6OUT
             bis.b   #BIT1, &P6DIR
+
+            ; Set Pin6.0 as output for SDA (Port 6.0
+            bis.b   #BIT0, &P6OUT
+            bis.b   #BIT0, &P6DIR
 
             ;LED Initialization
             bic.b   #BIT0,&P1OUT            ; Clear P1.0 output
@@ -60,7 +60,7 @@ init:
 
 main:
     call #i2c_write             ; call i2c_write
-
+    
             
             jmp main
             
@@ -88,7 +88,6 @@ i2c_stop:
     bis.b   #BIT1, &P6OUT        ; ensure SCL high
     nop
     bis.b   #BIT0, &P6OUT        ; Set SDA high
-    call    #i2c_sda_delay       ; short delay
     ret
 ;---------End i2c_stop Subroutine----------------------------------------------
 
@@ -157,7 +156,11 @@ TimerB0_1s:
 
 	reti
 ;-------------------------------End TimerB1_2s---------------------------------
+;-------------------------------Memory Allocation------------------------------
+.data
+tx_byte: .byte 0h
 
+;---------------------------End Memory Allocation------------------------------
 ;------------------------------------------------------------------------------
 ;           Interrupt Vectors
 ;------------------------------------------------------------------------------
