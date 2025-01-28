@@ -59,8 +59,7 @@ init:
 
 
 main:
-    call #i2c_start
-    call #i2c_stop
+    call #i2c_write             ; call i2c_write
 
             
             jmp main
@@ -78,7 +77,7 @@ main:
 ;---------Start i2c_start Subroutine-------------------------------------------
 i2c_start:
     bic.b   #BIT0, &P6OUT       ; set SDA low          
-    call    #i2c_sda_delay      ; short delay
+    nop
     bic.b   #BIT1, &P6OUT       ; pull clock low
     ret
 ;---------End i2c_start Subroutine---------------------------------------------
@@ -132,7 +131,10 @@ i2c_sda_delay:
 
 
 ;---------Start i2c_write Subroutine-------------------------------------------
-
+i2c_write:
+    call #i2c_start             ; call i2c_start
+    call #i2c_stop              ; call i2c_start
+    ret
 ;---------End i2c_write Subroutine---------------------------------------------
 
 
