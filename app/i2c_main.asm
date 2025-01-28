@@ -115,14 +115,9 @@ i2c_stop:
 
 ;---------Start i2c_sda_delay Subroutine---------------------------------------
 i2c_sda_delay:
-    mov.w   #0100h, R4      ; 1 ms delay
-delay:
-    nop
-    dec.w   R4              ; decrement delay var
-    jnz     delay           ; continue till R4 is zero
+   nop
+   nop
     ret
-    
-
 ;---------End i2c_sda_delay Subroutine-----------------------------------------
 
 
