@@ -104,7 +104,44 @@ i2c_stop:
 ;---------Start i2c_tx_byte Subroutine-----------------------------------------
 
 ;---------End i2c_tx_byte Subroutine-------------------------------------------
+i2c_tx_byte:
+    mov.b   R6, R7                 ; Copy byte to send
+    mov.b   #8, R6                 ; 8 bits to transmit
 
+send_byte_loop:
+    rlc.b   R7                     ; Rotate left, MSB moves into carry
+    jc      set_sda_high_tx         ; If carry is set, set SDA high
+    bic.b   #BIT0, &P6OUT           ; Else, SDA low
+    jmp     clk_pulse_byte
+
+set_sda_high_tx:
+    bis.b   #BIT0, &P6OUT           ; SDA high
+
+clk_pulse_byte:
+    bis.b   #BIT1, &P6OUT           ; SCL high
+    call    #i2c_scl_delay
+    bic.b   #BIT1, &P6OUT           ; SCL low
+    call    #i2c_scl_delay
+
+    dec.b   R6
+    jnz     send_byte_loop          ; Loop until all bits sent
+
+; Wait for ACK
+    bis.b   #BIT0, &P6DIR           ; Set SDA as input (release line)
+    bis.b   #BIT1, &P6OUT           ; SCL high
+    call    #i2c_scl_delay
+
+    bit.b   #BIT0, &P6IN            ; Check if SDA is high (no ACK)
+    jnz     nack_handler_data       ; If no ACK, handle error
+
+    bic.b   #BIT1, &P6OUT           ; SCL low
+    call    #i2c_scl_delay
+    bis.b   #BIT0, &P6DIR           ; Set SDA back as output
+    ret
+
+nack_handler_data:
+    call    #i2c_stop               ; Stop if no ACK
+    ret
 
 ;---------Start i2c_rx_byte Subroutine-----------------------------------------
 
@@ -173,9 +210,18 @@ nack_handler:
 
 ;---------Start i2c_write Subroutine-------------------------------------------
 i2c_write:
-    call #i2c_start             ; call i2c_start
-    call #i2c_send_address
-    call #i2c_stop              ; call i2c_start
+    call    #i2c_start             ; call i2c_start
+    call    #i2c_send_address
+    mov.b   #tx_data, R4           ; move memory 
+    mov.b   #4, R5                 ; # of bytes to transmit 
+    
+send_data_loop:
+    mov.b   @R4+, R6               ; Load byte from buffer
+    call    #i2c_tx_byte         ; Send byte
+    dec.b   R5
+    jnz     send_data_loop         ; Loop until all bytes sent
+
+    call    #i2c_stop              ; Send STOP condition
     ret
 ;---------End i2c_write Subroutine---------------------------------------------
 
@@ -184,7 +230,12 @@ i2c_write:
 
 
 ;---------End i2c_read Subroutine----------------------------------------------
-
+;------------------------------------------------------------------------------
+; Memory Allocation
+;------------------------------------------------------------------------------
+.data
+.retain
+tx_data: .byte 0x00, 0x01, 0x02
 
 ;------------------------------------------------------------------------------
 ; Interrupt Service Routines
