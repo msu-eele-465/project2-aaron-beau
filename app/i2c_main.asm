@@ -32,7 +32,7 @@ init:
             bis.b   #BIT1, &P6OUT
             bis.b   #BIT1, &P6DIR
 
-            ; Set Pin6.0 as output for SDA (Port 6.0
+            ; Set Pin6.0 as output for SDA (Port 6.0)
             bis.b   #BIT0, &P6OUT
             bis.b   #BIT0, &P6DIR
 
@@ -120,18 +120,61 @@ i2c_sda_delay:
 
 
 ;---------Start i2c_scl_delay Subroutine---------------------------------------
-
+i2c_scl_delay:
+    nop
+    nop
+    ret
 ;---------End i2c_scl_delay Subroutine-----------------------------------------
 
 
 ;---------Start i2c_send_address Subroutine------------------------------------
+i2c_send_address:
+    mov.b   #0xD0, R5         ; Load RTC write address (0x68 << 1 | 0)
+    mov.b   #8, R6            ; 8 bits to transmit
 
-;---------End i2c_send_address Subroutine--------------------------------------
+send_address_loop:
+    rlc.b   R5                ; Rotate left, MSB moves into carry
+    jc      set_sda_high       ; If carry is set, set SDA high
+    bic.b   #BIT0, &P6OUT      ; Else, SDA low
+    jmp     clk_pulse
+
+set_sda_high:
+    bis.b   #BIT0, &P6OUT      ; SDA high
+
+clk_pulse:
+    bis.b   #BIT1, &P6OUT      ; SCL high
+    call    #i2c_scl_delay
+    bic.b   #BIT1, &P6OUT      ; SCL low
+    call    #i2c_scl_delay
+
+    dec.b   R6
+    jnz     send_address_loop  ; Loop until all bits sent
+
+; Check for ACK
+    bis.b   #BIT0, &P6DIR      ; Set SDA as input (release line)
+    bis.b   #BIT1, &P6OUT      ; SCL high
+    call    #i2c_scl_delay
+
+    bit.b   #BIT0, &P6IN       ; Check if SDA is high (no ACK)
+    jnz     nack_handler       ; If no ACK, handle error
+
+    bic.b   #BIT1, &P6OUT      ; SCL low
+    call    #i2c_scl_delay
+    bis.b   #BIT0, &P6DIR      ; Set SDA back as output
+
+    ret                        ; Return to calling function
+
+nack_handler:
+    call    #i2c_stop          ; Send stop if no ACK received
+    ret
+
+;--------End i2c_send_address Subroutine--------------------------------------
 
 
 ;---------Start i2c_write Subroutine-------------------------------------------
 i2c_write:
     call #i2c_start             ; call i2c_start
+    call #i2c_send_address
     call #i2c_stop              ; call i2c_start
     ret
 ;---------End i2c_write Subroutine---------------------------------------------
@@ -156,11 +199,7 @@ TimerB0_1s:
 
 	reti
 ;-------------------------------End TimerB1_2s---------------------------------
-;-------------------------------Memory Allocation------------------------------
-.data
-tx_byte: .byte 0h
 
-;---------------------------End Memory Allocation------------------------------
 ;------------------------------------------------------------------------------
 ;           Interrupt Vectors
 ;------------------------------------------------------------------------------
