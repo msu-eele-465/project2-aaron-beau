@@ -85,6 +85,7 @@ i2c_start:
 
 ;---------Start i2c_stop Subroutine--------------------------------------------
 i2c_stop:
+    bic.b   #BIT0, &P6OUT
     bis.b   #BIT1, &P6OUT        ; ensure SCL high
     nop
     bis.b   #BIT0, &P6OUT        ; Set SDA high
@@ -128,6 +129,7 @@ clk_pulse_byte:
 
 ; Wait for ACK
     bic.b   #BIT0, &P6DIR           ; Set SDA as input (release line)
+    nop
     ;bis.b   #BIT0, &P6REN            ; enable resistors
     ;bis.b   #BIT0, &P6OUT           ; sest as pull up
     bis.b   #BIT1, &P6OUT           ; SCL high
