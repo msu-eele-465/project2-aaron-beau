@@ -85,6 +85,7 @@ i2c_start:
 
 ;---------Start i2c_stop Subroutine--------------------------------------------
 i2c_stop:
+    bic.b   #BIT0, &P6OUT
     bis.b   #BIT1, &P6OUT        ; ensure SCL high
     nop
     bis.b   #BIT0, &P6OUT        ; Set SDA high
@@ -102,8 +103,6 @@ i2c_stop:
 ;---------End i2c_rx_ack Subroutine--------------------------------------------
 
 ;---------Start i2c_tx_byte Subroutine-----------------------------------------
-
-;---------End i2c_tx_byte Subroutine-------------------------------------------
 i2c_tx_byte:
     mov.b   R6, R7                 ; Copy byte to send
     mov.b   #8, R6                 ; 8 bits to transmit
@@ -127,7 +126,10 @@ clk_pulse_byte:
     jnz     send_byte_loop          ; Loop until all bits sent
 
 ; Wait for ACK
-    bis.b   #BIT0, &P6DIR           ; Set SDA as input (release line)
+    bic.b   #BIT0, &P6DIR           ; Set SDA as input (release line)
+    nop
+    ;bis.b   #BIT0, &P6REN            ; enable resistors
+    ;bis.b   #BIT0, &P6OUT           ; sest as pull up
     bis.b   #BIT1, &P6OUT           ; SCL high
     call    #i2c_scl_delay
 
@@ -142,6 +144,7 @@ clk_pulse_byte:
 nack_handler_data:
     call    #i2c_stop               ; Stop if no ACK
     ret
+;---------End i2c_tx_byte Subroutine-------------------------------------------
 
 ;---------Start i2c_rx_byte Subroutine-----------------------------------------
 
@@ -152,12 +155,14 @@ nack_handler_data:
 i2c_sda_delay:
    nop
    nop
+   nop
     ret
 ;---------End i2c_sda_delay Subroutine-----------------------------------------
 
 
 ;---------Start i2c_scl_delay Subroutine---------------------------------------
 i2c_scl_delay:
+    nop
     nop
     nop
     ret
@@ -188,7 +193,9 @@ clk_pulse:
     jnz     send_address_loop  ; Loop until all bits sent
 
 ; Check for ACK
-    bis.b   #BIT0, &P6DIR      ; Set SDA as input (release line)
+    bic.b   #BIT0, &P6DIR      ; Set SDA as input (release line)
+    ;bis.b   #BIT0, &P6REN       ; enable resistors
+    ;bis.b   #BIT0, &P6OUT      ; set as pull up
     bis.b   #BIT1, &P6OUT      ; SCL high
     call    #i2c_scl_delay
 
@@ -212,12 +219,12 @@ nack_handler:
 i2c_write:
     call    #i2c_start             ; call i2c_start
     call    #i2c_send_address
-    mov.b   #tx_data, R4           ; move memory 
-    mov.b   #4, R5                 ; # of bytes to transmit 
+    mov.w   #tx_data, R4           ; move memory 
+    mov.b   #10, R5                 ; # of bytes to transmit 
     
 send_data_loop:
     mov.b   @R4+, R6               ; Load byte from buffer
-    call    #i2c_tx_byte         ; Send byte
+    call    #i2c_tx_byte           ; Send byte
     dec.b   R5
     jnz     send_data_loop         ; Loop until all bytes sent
 
@@ -235,7 +242,7 @@ send_data_loop:
 ;------------------------------------------------------------------------------
 .data
 .retain
-tx_data: .byte 0x00, 0x01, 0x02
+tx_data: .byte 0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09
 
 ;------------------------------------------------------------------------------
 ; Interrupt Service Routines
