@@ -103,8 +103,6 @@ i2c_stop:
 ;---------End i2c_rx_ack Subroutine--------------------------------------------
 
 ;---------Start i2c_tx_byte Subroutine-----------------------------------------
-
-;---------End i2c_tx_byte Subroutine-------------------------------------------
 i2c_tx_byte:
     mov.b   R6, R7                 ; Copy byte to send
     mov.b   #8, R6                 ; 8 bits to transmit
@@ -146,6 +144,7 @@ clk_pulse_byte:
 nack_handler_data:
     call    #i2c_stop               ; Stop if no ACK
     ret
+;---------End i2c_tx_byte Subroutine-------------------------------------------
 
 ;---------Start i2c_rx_byte Subroutine-----------------------------------------
 
@@ -221,7 +220,7 @@ i2c_write:
     call    #i2c_start             ; call i2c_start
     call    #i2c_send_address
     mov.w   #tx_data, R4           ; move memory 
-    mov.b   #2, R5                 ; # of bytes to transmit 
+    mov.b   #10, R5                 ; # of bytes to transmit 
     
 send_data_loop:
     mov.b   @R4+, R6               ; Load byte from buffer
@@ -243,7 +242,7 @@ send_data_loop:
 ;------------------------------------------------------------------------------
 .data
 .retain
-tx_data: .byte 0x00, 0x01
+tx_data: .byte 0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09
 
 ;------------------------------------------------------------------------------
 ; Interrupt Service Routines
