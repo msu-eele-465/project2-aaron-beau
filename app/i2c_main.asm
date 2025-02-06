@@ -59,7 +59,8 @@ init:
 
 
 main:
-    call #i2c_write             ; call i2c_write
+    ;call #i2c_write
+    call #i2c_read             ; call i2c_write
     
             
             jmp main
@@ -171,7 +172,8 @@ i2c_scl_delay:
 
 ;---------Start i2c_send_address Subroutine------------------------------------
 i2c_send_address:
-    mov.b   #0xD0, R5         ; Load RTC write address (0x68 << 1 | 0)
+ 
+    ;mov.b   #0xD0, R5         ;(ADDED TO WRITE SUB, REMOVE WHEN CLEAN) Load RTC write address (0x68 << 1 | 0) 
     mov.b   #8, R6            ; 8 bits to transmit
 
 send_address_loop:
@@ -217,6 +219,7 @@ nack_handler:
 
 ;---------Start i2c_write Subroutine-------------------------------------------
 i2c_write:
+    mov.b   #0xD0, R5         ; Load RTC write address (0x68 << 1 | 0)
     call    #i2c_start             ; call i2c_start
     call    #i2c_send_address
     mov.w   #tx_data, R4           ; move memory 
@@ -234,8 +237,15 @@ send_data_loop:
 
 
 ;---------Start i2c_read Subroutine--------------------------------------------
+i2c_read:
+    mov.b   #0xD1, R5              ; Load RTC read address (0x68 << 1 | 1)
+    call    #i2c_start             ; call i2c_start
+    call    #i2c_send_address
 
 
+    call    #i2c_stop              ; Send STOP condition
+
+    ret
 ;---------End i2c_read Subroutine----------------------------------------------
 ;------------------------------------------------------------------------------
 ; Memory Allocation
@@ -243,7 +253,7 @@ send_data_loop:
 .data
 .retain
 tx_data: .byte 0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09
-
+rx_data: .byte 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
 ;------------------------------------------------------------------------------
 ; Interrupt Service Routines
 ;------------------------------------------------------------------------------
