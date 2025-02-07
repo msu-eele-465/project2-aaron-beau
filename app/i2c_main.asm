@@ -56,14 +56,15 @@ init:
             nop
             bis.w	#GIE, SR					;Enable global interrupt
             nop
-
+           
 
 main:
     call #i2c_write
+main_loop:
     call #i2c_read             ; call i2c_write
     
             
-            jmp main
+            jmp main_loop
             
 
 
@@ -119,8 +120,6 @@ clk_pulse_byte:
 ; Wait for ACK
     bic.b   #BIT0, &P6DIR           ; Set SDA as input (release line)
     nop
-    ;bis.b   #BIT0, &P6REN            ; enable resistors
-    ;bis.b   #BIT0, &P6OUT           ; sest as pull up
     bis.b   #BIT1, &P6OUT           ; SCL high
     call    #i2c_scl_delay
 
@@ -218,8 +217,6 @@ clk_pulse:
 
 ; Check for ACK
     bic.b   #BIT0, &P6DIR      ; Set SDA as input (release line)
-    ;bis.b   #BIT0, &P6REN       ; enable resistors
-    ;bis.b   #BIT0, &P6OUT      ; set as pull up
     bis.b   #BIT1, &P6OUT      ; SCL high
     call    #i2c_scl_delay
 
