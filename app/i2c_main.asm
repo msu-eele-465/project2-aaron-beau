@@ -59,7 +59,7 @@ init:
 
 
 main:
-    ;call #i2c_write
+    call #i2c_write
     call #i2c_read             ; call i2c_write
     
             
@@ -92,16 +92,6 @@ i2c_stop:
     bis.b   #BIT0, &P6OUT        ; Set SDA high
     ret
 ;---------End i2c_stop Subroutine----------------------------------------------
-
-
-;---------Start i2c_tx_ack Subroutine------------------------------------------
-
-;---------End i2c_tx_ack Subroutine--------------------------------------------
-
-
-;---------Start i2c_rx_ack Subroutine------------------------------------------
-
-;---------End i2c_rx_ack Subroutine--------------------------------------------
 
 ;---------Start i2c_tx_byte Subroutine-----------------------------------------
 i2c_tx_byte:
@@ -148,7 +138,40 @@ nack_handler_data:
 ;---------End i2c_tx_byte Subroutine-------------------------------------------
 
 ;---------Start i2c_rx_byte Subroutine-----------------------------------------
+i2c_rx_byte:
+    bic.b   #BIT0, &P6DIR       ; Set SDA as input (release line)
+    mov.b   #8, R7              ; 8 bits to receive
+    clr.b   R6                  ; Clear R6 (store received byte)
 
+receive_loop:
+    bis.b   #BIT1, &P6OUT       ; SCL high (slave puts bit on SDA)
+    call    #i2c_scl_delay      ; Delay for clock high
+
+    bit.b   #BIT0, &P6IN        ; Read SDA
+    rlc.b   R6                  ; Shift left, storing bit in R6
+
+    bic.b   #BIT1, &P6OUT       ; SCL low
+    call    #i2c_scl_delay      ; Delay for clock low
+
+    dec.b   R7
+    jnz     receive_loop        ; Loop for 8 bits
+
+; Send ACK/NACK
+    bis.b   #BIT0, &P6DIR       ; Set SDA as output
+    cmp.b   #1, R5              ; Is this the last byte?
+    jne     send_ack            ; If not last byte, send ACK
+    bis.b   #BIT0, &P6OUT       ; Else send NACK (SDA high)
+    jmp     clk_pulse_ack
+
+send_ack:
+    bic.b   #BIT0, &P6OUT       ; SDA low (ACK)
+
+clk_pulse_ack:
+    bis.b   #BIT1, &P6OUT       ; SCL high (send ACK/NACK)
+    call    #i2c_scl_delay
+    bic.b   #BIT1, &P6OUT       ; SCL low
+    call    #i2c_scl_delay
+ret
 ;---------End i2c_rx_byte Subroutine-------------------------------------------
 
 
@@ -172,8 +195,7 @@ i2c_scl_delay:
 
 ;---------Start i2c_send_address Subroutine------------------------------------
 i2c_send_address:
- 
-    ;mov.b   #0xD0, R5         ;(ADDED TO WRITE SUB, REMOVE WHEN CLEAN) Load RTC write address (0x68 << 1 | 0) 
+
     mov.b   #8, R6            ; 8 bits to transmit
 
 send_address_loop:
@@ -219,11 +241,11 @@ nack_handler:
 
 ;---------Start i2c_write Subroutine-------------------------------------------
 i2c_write:
-    mov.b   #0xD0, R5         ; Load RTC write address (0x68 << 1 | 0)
+    mov.b   #0xD0, R5               ; Load RTC write address (0x68 << 1 | 0)
     call    #i2c_start             ; call i2c_start
     call    #i2c_send_address
     mov.w   #tx_data, R4           ; move memory 
-    mov.b   #10, R5                 ; # of bytes to transmit 
+    mov.b   #3, R5                 ; # of bytes to transmit 
     
 send_data_loop:
     mov.b   @R4+, R6               ; Load byte from buffer
@@ -241,7 +263,15 @@ i2c_read:
     mov.b   #0xD1, R5              ; Load RTC read address (0x68 << 1 | 1)
     call    #i2c_start             ; call i2c_start
     call    #i2c_send_address
-
+   
+   mov.w    #rx_data, R4
+   mov.b    #3, R5
+   
+read_data_loop:
+   mov.b    @R4+, R6
+   call     #i2c_rx_byte
+   dec.b    R5
+   jnz      read_data_loop
 
     call    #i2c_stop              ; Send STOP condition
 
@@ -252,9 +282,9 @@ i2c_read:
 ;------------------------------------------------------------------------------
 .data
 .retain
-tx_data: .byte 0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09
+tx_data: .byte 0x00, 0x01, 0x02
 
-rx_data: .byte 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+rx_data: .space 10
 
 
 
