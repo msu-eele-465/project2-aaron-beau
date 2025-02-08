@@ -56,10 +56,11 @@ init:
             nop
             bis.w	#GIE, SR					;Enable global interrupt
             nop
-           
+        
 
 main:
     call #i2c_write
+
 main_loop:
     call #i2c_read             ; call i2c_write
     
@@ -242,7 +243,7 @@ i2c_write:
     call    #i2c_start             ; call i2c_start
     call    #i2c_send_address
     mov.w   #tx_data, R4           ; move memory 
-    mov.b   #3, R5                 ; # of bytes to transmit 
+    mov.b   #5, R5                 ; # of bytes to transmit 
     
 send_data_loop:
     mov.b   @R4+, R6               ; Load byte from buffer
@@ -257,31 +258,36 @@ send_data_loop:
 
 ;---------Start i2c_read Subroutine--------------------------------------------
 i2c_read:
+    call    #i2c_write              ; write register address to clock
+    
+    call    #i2c_start              ; repeated start
     mov.b   #0xD1, R5              ; Load RTC read address (0x68 << 1 | 1)
-    call    #i2c_start             ; call i2c_start
-    call    #i2c_send_address
-   
-   mov.w    #rx_data, R4
-   mov.b    #3, R5
+    call    #i2c_send_address       ; send read address
+
+    mov.w    #rx_data, R4           ;move rx_data space to R4 to be stored
+    mov.b    #5, R5                 ; number of bytes to be read
    
 read_data_loop:
-   mov.b    @R4+, R6
-   call     #i2c_rx_byte
-   dec.b    R5
-   jnz      read_data_loop
+    call     #i2c_rx_byte           
+    mov.b    R6, 0(R4)              ; stash received data in first block of memory
+    inc.b    R4                     ; move to next block
+    inc.b    R4
+    dec.b    R5                     ;decrement number of bytes to be read
+   jnz      read_data_loop          ;repeat until all bytes have been read
 
     call    #i2c_stop              ; Send STOP condition
 
     ret
 ;---------End i2c_read Subroutine----------------------------------------------
+ 
 ;------------------------------------------------------------------------------
 ; Memory Allocation
 ;------------------------------------------------------------------------------
 .data
 .retain
-tx_data: .byte 0x00, 0x01, 0x02
+tx_data: .byte 0x00, 0x01, 0x02, 0x11, 0x12
 
-rx_data: .space 10
+rx_data: .space 5
 
 
 
