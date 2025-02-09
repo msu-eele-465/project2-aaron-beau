@@ -63,9 +63,14 @@ main:
 
 main_loop:
     call #i2c_read             ; call i2c_write
-    
-            
-            jmp main_loop
+
+delay_1s:
+    mov.w   #60000, R15       ; Load counter (~1 sec delay)
+delay_loop:
+    dec.w   R15               ; Decrement counter
+    jnz     delay_loop        ; Loop until R15 reaches 0
+           
+    jmp main_loop
             
 
 
@@ -258,25 +263,30 @@ send_data_loop:
 
 ;---------Start i2c_read Subroutine--------------------------------------------
 i2c_read:
-    call    #i2c_write              ; write register address to clock
-    
-    call    #i2c_start              ; repeated start
-    mov.b   #0xD1, R5              ; Load RTC read address (0x68 << 1 | 1)
-    call    #i2c_send_address       ; send read address
+    call    #i2c_start              ; Start condition
+    mov.b   #0xD0, R5               ; RTC write address (0x68 << 1 | 0)
+    call    #i2c_send_address        ; Send write address
 
-    mov.w    #rx_data, R4           ;move rx_data space to R4 to be stored
-    mov.b    #5, R5                 ; number of bytes to be read
-   
+    mov.b   #0x00, R6               ; Register address to start reading (seconds register)
+    call    #i2c_tx_byte             ; Send register address
+
+    call    #i2c_stop                ; Stop to end write phase
+    call    #i2c_start               ; Repeated start for read
+
+    mov.b   #0xD1, R5               ; RTC read address (0x68 << 1 | 1)
+    call    #i2c_send_address        ; Send read address
+
+    mov.w   #rx_data, R4            ; Store data in rx_data buffer
+    mov.b   #5, R5                  ; Number of bytes to read (seconds, minutes, hours, temp MSB, temp LSB)
+
 read_data_loop:
-    call     #i2c_rx_byte           
-    mov.b    R6, 0(R4)              ; stash received data in first block of memory
-    inc.b    R4                     ; move to next block
-    inc.b    R4
-    dec.b    R5                     ;decrement number of bytes to be read
-   jnz      read_data_loop          ;repeat until all bytes have been read
+    call    #i2c_rx_byte             ; Receive one byte
+    mov.b   R6, 0(R4)                ; Store received byte
+    inc.b   R4                       ; Move buffer pointer
+    dec.b   R5                       ; Decrement count
+    jnz     read_data_loop            ; Repeat until all bytes received
 
-    call    #i2c_stop              ; Send STOP condition
-
+    call    #i2c_stop                 ; Send STOP condition
     ret
 ;---------End i2c_read Subroutine----------------------------------------------
  
@@ -285,7 +295,7 @@ read_data_loop:
 ;------------------------------------------------------------------------------
 .data
 .retain
-tx_data: .byte 0x00, 0x01, 0x02, 0x11, 0x12
+tx_data: .byte 00h, 01h, 02h, 11h, 12h
 
 rx_data: .space 5
 
