@@ -64,7 +64,7 @@ main:
 main_loop:
     call #i2c_read             ; call i2c_write
 
-    mov.w   #60000, R15       ; Load counter (~1 sec delay)
+    mov.w   #70000, R15       ; Load counter (~1 sec delay)
 delay_loop:
     dec.w   R15               ; Decrement counter
     jnz     delay_loop        ; Loop until R15 reaches 0
