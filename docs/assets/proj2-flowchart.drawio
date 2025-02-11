@@ -4,8 +4,8 @@
       <root>
         <mxCell id="0" />
         <mxCell id="1" parent="0" />
-        <mxCell id="RWEaB8NZT3KyRUcJoQo4-1" value="INIT&lt;div&gt;P6.0 (SDA)&lt;/div&gt;&lt;div&gt;P6.1 (CLK)&lt;/div&gt;" style="shape=document;whiteSpace=wrap;html=1;boundedLbl=1;fillColor=#00FF00;rounded=0;" parent="1" vertex="1">
-          <mxGeometry y="15" width="120" height="80" as="geometry" />
+        <mxCell id="RWEaB8NZT3KyRUcJoQo4-1" value="&lt;u&gt;INIT&lt;/u&gt;&lt;div&gt;P6.0 (SDA)&lt;/div&gt;&lt;div&gt;P6.1 (CLK)&lt;/div&gt;&lt;div&gt;P1.0 (LED1)&lt;/div&gt;&lt;div&gt;R4 (Read Memory Address)&lt;/div&gt;&lt;div&gt;R5 (Address and Byte Counter)&lt;/div&gt;&lt;div&gt;R6&lt;span style=&quot;background-color: transparent; color: light-dark(rgb(0, 0, 0), rgb(255, 255, 255));&quot;&gt;&amp;nbsp;(Bit Counter/Read Data)&lt;/span&gt;&lt;/div&gt;&lt;div&gt;&lt;span style=&quot;background-color: transparent; color: light-dark(rgb(0, 0, 0), rgb(255, 255, 255));&quot;&gt;R7 (Bit Counter)&lt;/span&gt;&lt;/div&gt;&lt;div&gt;&lt;span style=&quot;background-color: transparent; color: light-dark(rgb(0, 0, 0), rgb(255, 255, 255));&quot;&gt;tx_data (Write Data)&lt;/span&gt;&lt;/div&gt;&lt;div&gt;&lt;span style=&quot;background-color: transparent; color: light-dark(rgb(0, 0, 0), rgb(255, 255, 255));&quot;&gt;rx_data (Read Memory)&lt;/span&gt;&lt;/div&gt;&lt;div&gt;&lt;br&gt;&lt;/div&gt;&lt;div&gt;&lt;br&gt;&lt;/div&gt;" style="shape=document;whiteSpace=wrap;html=1;boundedLbl=1;fillColor=#00FF00;rounded=0;" parent="1" vertex="1">
+          <mxGeometry y="15" width="120" height="345" as="geometry" />
         </mxCell>
         <mxCell id="RWEaB8NZT3KyRUcJoQo4-5" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" parent="1" source="RWEaB8NZT3KyRUcJoQo4-2" edge="1">
           <mxGeometry relative="1" as="geometry">
@@ -538,14 +538,8 @@
         <mxCell id="yD9RNct-eagENZSPVsv9-3" value="Main" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FF8000;arcSize=47;" vertex="1" parent="1">
           <mxGeometry x="140" y="205" width="120" height="60" as="geometry" />
         </mxCell>
-        <mxCell id="yD9RNct-eagENZSPVsv9-15" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="yD9RNct-eagENZSPVsv9-5" target="yD9RNct-eagENZSPVsv9-3">
-          <mxGeometry relative="1" as="geometry">
-            <Array as="points">
-              <mxPoint x="200" y="500" />
-              <mxPoint x="80" y="500" />
-              <mxPoint x="80" y="235" />
-            </Array>
-          </mxGeometry>
+        <mxCell id="yD9RNct-eagENZSPVsv9-17" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="yD9RNct-eagENZSPVsv9-5" target="yD9RNct-eagENZSPVsv9-16">
+          <mxGeometry relative="1" as="geometry" />
         </mxCell>
         <mxCell id="yD9RNct-eagENZSPVsv9-5" value="delay_loop" style="shape=parallelogram;perimeter=parallelogramPerimeter;whiteSpace=wrap;html=1;fixedSize=1;fillColor=#007FFF;rounded=0;" vertex="1" parent="1">
           <mxGeometry x="140" y="420" width="120" height="60" as="geometry" />
@@ -555,6 +549,9 @@
         </mxCell>
         <mxCell id="yD9RNct-eagENZSPVsv9-8" value="i2c_read" style="shape=parallelogram;perimeter=parallelogramPerimeter;whiteSpace=wrap;html=1;fixedSize=1;fillColor=#007FFF;rounded=0;" vertex="1" parent="1">
           <mxGeometry x="140" y="315" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="yD9RNct-eagENZSPVsv9-16" value="RETURN" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FF8000;arcSize=41;" vertex="1" parent="1">
+          <mxGeometry x="140" y="510" width="120" height="60" as="geometry" />
         </mxCell>
       </root>
     </mxGraphModel>
