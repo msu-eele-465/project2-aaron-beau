@@ -2,8 +2,31 @@
 ; Beau Coburn & Aaron Foster
 ; EELE 465 Project 2: I2C RTC
 ; 2/6/2025
-;Description:
+; Description: This project utilizes I2C to read and write to a DS3231 real-time 
+; clock. Additionally, the data being transmitted both ways can be viewed using an 
+; Analog Discovery 2.
 ;-------------------------------------------------------------------------------
+;--------PINOUTS----------
+; P1.0: RED LED
+; P6.0: SDA
+; P6.1: CLK
+;-------------------------
+
+;-----MISC. MEMORY--------
+; R4: Reading Memory address
+; R5: Address/Byte counter
+; R6: Bit Counter, Read Data
+; R7: Bit Counter
+; tx_data: write data
+; rx_data: read data
+;-------------------------
+
+;------TIMER MATH---------
+; ACLK (32.768kHz)
+; 12 counter length
+; Divider of 4
+; (1/32.768k)*2^12*4=0.5s
+;-------------------------
 
 ;-------------------------------------------------------------------------------
 ; Include files
@@ -374,7 +397,7 @@ rx_data: .space 5                           ; space for values to be saved
 
 
 ;--------------------------Start TimerB1_2s------------------------------------
-;Interrupt gives visual that code is indeed operating
+;Interrupt gives visual that code is indeed operating. fLASHES @1s (0.5Hz)
 TimerB0_1s:
 
 	xor.b	#BIT0, &P1OUT		; Toggle P1.0(LED)
