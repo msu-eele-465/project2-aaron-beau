@@ -59,12 +59,12 @@ init:
         
 
 main:
-    call #i2c_write
+    call #i2c_write            ; write to slave 
 
 main_loop:
-    call #i2c_read             ; call i2c_write
+    call #i2c_read             ; call i2c_read
 
-    mov.w   #60000, R15       ; Load counter (~1 sec delay)
+    mov.w   #70000, R15       ; Load counter (~1 sec delay)
 delay_loop:
     dec.w   R15               ; Decrement counter
     jnz     delay_loop        ; Loop until R15 reaches 0
@@ -300,34 +300,58 @@ send_data_loop:
 ;to be read from the slave is then sent and a stop condition sent.  A repeated start
 ;is sent followed by the read address.  The number of bytes to be read is set and the 
 ;read subroutine called.  The data is then collected into a register and stored in the memory
-;that was allocated by rx_data.  This is repeated until all five bytes of desired data have been read
+;that was allocated by rx_data.  This is repeated until all 3 bytes of time data and all 2 temp bytes have been read
 ;being seconds, minutes, hours, and both bytes of temperature data.  A stop condition is then called and the
 ;subroutine is left.
 i2c_read:
-    call    #i2c_start              ; Start condition
-    mov.b   #0xD0, R5               ; RTC write address (0x68 << 1 | 0)
-    call    #i2c_send_address        ; Send write address
+    call    #i2c_start               ; Start condition
+    mov.b   #0xD0, R5                ; RTC write address (0x68 << 1 | 0)
+    call    #i2c_send_address         ; Send write address
 
-    mov.b   #0x00, R6               ; Register address to start reading (seconds register)
-    call    #i2c_tx_byte             ; Send register address
+    mov.b   #0x00, R6                ; Start from SECONDS register
+    call    #i2c_tx_byte              ; Send register address
 
-    call    #i2c_stop                ; Stop to end write phase
-    call    #i2c_start               ; Repeated start for read
+    call    #i2c_stop                 ; Stop to end write phase
+    call    #i2c_start                ; Repeated start for read
 
-    mov.b   #0xD1, R5               ; RTC read address (0x68 << 1 | 1)
-    call    #i2c_send_address        ; Send read address
+    mov.b   #0xD1, R5                ; RTC read address (0x68 << 1 | 1)
+    call    #i2c_send_address         ; Send read address
 
-    mov.w   #rx_data, R4            ; Store data in rx_data buffer
-    mov.b   #5, R5                  ; Number of bytes to read (seconds, minutes, hours, temp MSB, temp LSB)
+    mov.w   #rx_data, R4              ; Store data in rx_data buffer
+    mov.b   #3, R5                    ; Read only 3 bytes (seconds, minutes, hours)
 
-read_data_loop:
-    call    #i2c_rx_byte             ; Receive one byte
-    mov.b   R6, 0(R4)                ; Store received byte
-    inc.b   R4                       ; Move buffer pointer
-    dec.b   R5                       ; Decrement count
-    jnz     read_data_loop            ; Repeat until all bytes received
+read_time_loop:
+    call    #i2c_rx_byte              ; Receive one byte
+    mov.b   R6, 0(R4)                 ; Store received byte
+    inc.b   R4                        ; Move buffer pointer
+    dec.b   R5                        ; Decrement count
+    jnz     read_time_loop             ; Repeat until 3 bytes read
 
-    call    #i2c_stop                 ; Send STOP condition
+    call    #i2c_stop                 ; Stop before switching register
+
+    call    #i2c_start                ; Start again for temperature
+    mov.b   #0xD0, R5                 ; RTC write address
+    call    #i2c_send_address         
+
+    mov.b   #0x11, R6                 ; Start from TEMP_MSB register
+    call    #i2c_tx_byte              
+
+    call    #i2c_stop                 ; Stop to end write phase
+    call    #i2c_start                ; Repeated start for read
+
+    mov.b   #0xD1, R5                 ; RTC read address
+    call    #i2c_send_address         
+
+    mov.b   #2, R5                    ; Read 2 bytes (Temp MSB, Temp LSB)
+
+read_temp_loop:
+    call    #i2c_rx_byte              
+    mov.b   R6, 0(R4)                 ; Store received byte
+    inc.b   R4                        ; Move buffer pointer
+    dec.b   R5                        
+    jnz     read_temp_loop            
+
+    call    #i2c_stop                 ; Stop condition
     ret
 ;---------End i2c_read Subroutine----------------------------------------------
  
@@ -336,7 +360,7 @@ read_data_loop:
 ;------------------------------------------------------------------------------
 .data
 .retain
-tx_data: .byte 00h, 01h, 02h, 11h, 12h      ;address to be written to (sec, min, hr, MSB temp, LSB temp)
+tx_data: .byte 0x00, 0x01, 0x02, 0x11, 0x12      ;address to be written to (sec, min, hr, MSB temp, LSB temp)
 
 rx_data: .space 5                           ; space for values to be saved
 
