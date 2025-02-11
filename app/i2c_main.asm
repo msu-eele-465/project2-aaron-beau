@@ -323,7 +323,7 @@ i2c_read:
 read_time_loop:
     call    #i2c_rx_byte              ; Receive one byte
     mov.b   R6, 0(R4)                 ; Store received byte
-    inc.b   R4                        ; Move buffer pointer
+    inc.w   R4                        ; Move buffer pointer
     dec.b   R5                        ; Decrement count
     jnz     read_time_loop             ; Repeat until 3 bytes read
 
@@ -343,11 +343,12 @@ read_time_loop:
     call    #i2c_send_address         
 
     mov.b   #2, R5                    ; Read 2 bytes (Temp MSB, Temp LSB)
+    ;Temperature = MSB + LSB/256
 
 read_temp_loop:
     call    #i2c_rx_byte              
-    mov.b   R6, 0(R4)                 ; Store received byte
-    inc.b   R4                        ; Move buffer pointer
+    mov.b   R6, 4(R4)                 ; Store received byte
+    inc.w   R4                        ; Move buffer pointer
     dec.b   R5                        
     jnz     read_temp_loop            
 
@@ -362,6 +363,7 @@ read_temp_loop:
 .retain
 tx_data: .byte 0x00, 0x01, 0x02, 0x11, 0x12      ;address to be written to (sec, min, hr, MSB temp, LSB temp)
 
+.bss
 rx_data: .space 5                           ; space for values to be saved
 
 
